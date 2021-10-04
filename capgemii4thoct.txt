@@ -1,0 +1,312 @@
+Select * from emp
+Select * from dept
+insert into dept(deptno,locid) values(80,104)
+create table empbackup (empno int primary key,empname varchar(20),salary int)
+insert into empbackup(empno,empname,salary)   select empno, empname ,salary from emp
+Select * from empbackup
+
+update emp set job='manager',deptno=10,salary=8000 where empno=1001
+update emp set salary=salary+(salary*10/100) where deptno=10
+
+delete from emp where empno=1009
+
+truncate from emp
+drop
+
+create view empview1 as select empno,empname,salary,salary*10/100 as tax from emp
+select * from empview1
+
+select empno,empname,salary,salary-tax as netsalary from empview1
+update empview1 set salary=10000 where empno=1001
+update emp set salary=9000 where empno=1001
+
+create view joinview1 as select a.empno,a.empname,a.job,a.deptno,a.salary,b.deptname,b.locid,c.loc_name from 
+emp a,dept b,location c where a.deptno=b.deptno and b.locid=c.locid
+
+select * from joinview1
+select empno,empname,loc_name from joinview1
+
+create sequence seq1 as int
+start with 1001
+increment by 1
+maxvalue 9999
+no cycle
+
+create table tempEmp(empno int primary key,empname varchar(20),salary int)
+--user1
+insert into tempEmp values(1001,
+select * from tempEmp
+--user2
+insert into tempEmp values(next value for seq1,'peter',7000)
+select * from tempEmp
+--user3
+insert into tempEmp values(next value for seq1,'rahul',8000)
+
+insert into tempEmp values(next value for seq1,'sam',6000)
+
+create index empindex on emp(empname)
+create index empindex1 on emp(empname,job)
+
+create table empCons(empno int primary key,empname varchar(20) not null,
+emailid varchar(20) unique, deptno int constraint f_key_cons foreign key(deptno)
+references dept(deptno),salary int check(salary between 5000 and 20000))
+
+select * from empCons
+
+insert into empCons values(1001,'sam','sam@123',10,10000)
+insert into empCons values(1004,'peter','pt@gmail',20,12000)
+
+select getdate()
+
+alter table emp add doj date
+Select * from emp
+
+select empno,empname,doj,datediff(yy,doj,GETDATE()) as work_exp from emp
+select empno,empname,doj,datediff(dd,doj,GETDATE()) as work_exp from emp
+select empno,empname,doj,datediff(mm,doj,GETDATE()) as work_exp from emp
+select empno,empname,doj,datediff(HOUR,doj,GETDATE()) as work_exp from emp
+select empno,empname,doj,datediff(MINUTE,doj,GETDATE()) as work_exp from emp
+
+select empno,empname,doj,datepart(dd,doj) as year1 from emp
+select empno,empname,doj,datepart(yy,doj) as year1 from emp
+select empno,empname,doj,datepart(mm,doj) as year1 from emp
+
+select dateadd(mm,42,GETDATE()) as future_date from emp
+select dateadd(hh,10000,GETDATE()) 
+
+declare
+@empno int,
+@empname varchar(20),
+@salary int
+begin
+set @empno=1001
+set @empname='sam'
+set @salary=8000
+select @empno as empno, @empname as empname, @salary as salary
+end
+
+--create procedure getrec
+alter procedure getrec(@eno int)
+as
+declare
+@empno1 int,
+@empname1 varchar(20),
+@job varchar(20),
+@deptno int,
+@salary1 int
+begin
+select @empno1=empno,@empname1=empname,@job=job,@deptno=deptno,
+@salary1=salary from emp where empno=@eno
+select @empno1 as empno, @empname1 as empname, @job as job,@deptno as deptno ,@salary1 as salary
+end
+
+exec getrec 1003
+
+create procedure getrec1(@eno int)
+as
+declare
+@empno1 int,
+@empname1 varchar(20),
+@job varchar(20),
+@deptno int,
+@salary1 int,
+@tax int,
+@netsal int
+begin
+select @empno1=empno,@empname1=empname,@job=job,@deptno=deptno,
+@salary1=salary from emp where empno=@eno
+
+if(@salary1 >= 8000 and @salary1 < 10000)
+begin
+set @tax=@salary1*10/100;
+set @netsal=@salary1-@tax;
+end
+else if(@salary1 >= 6000 and @salary1 < 8000)
+begin
+set @tax=@salary1*6/100;
+set @netsal=@salary1-@tax;
+end
+else if(@salary1 >= 4000 and @salary1 < 6000)
+begin
+set @tax=@salary1*4/100;
+set @netsal=@salary1-@tax;
+end
+else
+begin
+set @tax=@salary1*2/100;
+set @netsal=@salary1-@tax;
+end
+select @empno1 as empno, @empname1 as empname, @job as job,
+@deptno as deptno ,@salary1 as salary ,@tax as tax,@netsal as netsalary 
+end
+
+exec getrec1 1004
+
+
+create procedure getrec2
+as
+declare empcur cursor for select empno,empname,job,deptno,salary from emp
+declare
+@empno1 int,
+@empname1 varchar(20),
+@job1 varchar(20),
+@deptno1 int,
+@salary1 int,
+@tax1 int,
+@netsal1 int
+begin
+open empcur
+
+fetch next from empcur into @empno1,@empname1,@job1,@deptno1,@salary1
+
+while @@fetch_status=0
+begin
+if(@salary1 >= 8000 and @salary1 < 10000)
+begin
+set @tax1=@salary1*10/100;
+set @netsal1=@salary1-@tax1;
+end
+else if(@salary1 >= 6000 and @salary1 < 8000)
+begin
+set @tax1=@salary1*6/100;
+set @netsal1=@salary1-@tax1;
+end
+else if(@salary1 >= 4000 and @salary1 < 6000)
+begin
+set @tax1=@salary1*4/100;
+set @netsal1=@salary1-@tax1;
+end
+else
+begin
+set @tax1=@salary1*2/100;
+set @netsal1=@salary1-@tax1;
+end
+select @empno1 as empno, @empname1 as empname, @job1 as job,
+@deptno1 as deptno ,@salary1 as salary ,@tax1 as tax,@netsal1 as netsalary 
+
+fetch next from empcur into @empno1,@empname1,@job1,@deptno1,@salary1
+end 
+close empcur
+deallocate empcur
+end
+
+exec getrec2
+
+
+create function f1(@empno int)
+returns int
+as
+begin
+declare @salary int
+select @salary=salary from emp where empno=@empno
+return @salary
+end
+
+select dbo.f1(1003) 
+select empno,empname,dbo.f1(empno) as salary from emp
+
+
+create function f2(@empno int)
+returns varchar(20)
+as
+begin
+declare @salary int,
+@taxable varchar(20)
+select @salary=salary from emp where empno=@empno
+if(@salary >=6000)
+set @taxable='taxable'
+else
+set @taxable='not taxable'
+return @taxable
+end
+
+select empno,empname,salary,dbo.f2(empno) as taxable from emp
+
+alter function f3(@empno int)
+returns int
+as
+begin
+declare @salary1 int,
+@tax1 int
+select @salary1=salary from emp where empno=@empno
+if(@salary1 >= 8000 and @salary1 < 10000)
+begin
+set @tax1=@salary1*10/100;
+end
+else if(@salary1 >= 6000 and @salary1 < 8000)
+begin
+set @tax1=@salary1*6/100;
+end
+else if(@salary1 >= 4000 and @salary1 < 6000)
+begin
+set @tax1=@salary1*4/100;
+end
+else
+begin
+set @tax1=@salary1*2/100;
+end
+return @tax1
+end
+
+select empno,empname,salary,dbo.f3(empno) as tax from emp
+
+
+create procedure getrec4
+as
+declare empcur cursor for select empno,empname,job,deptno,salary from emp
+declare
+@empno1 int,
+@empname1 varchar(20),
+@job1 varchar(20),
+@deptno1 int,
+@salary1 int,
+@tax1 int,
+@netsal1 int
+begin
+open empcur
+
+fetch next from empcur into @empno1,@empname1,@job1,@deptno1,@salary1
+
+while @@fetch_status=0
+begin
+
+set @tax1=dbo.f3(@empno1)
+select @empno1 as empno, @empname1 as empname, @job1 as job,
+@deptno1 as deptno ,@salary1 as salary ,@tax1 as tax
+
+fetch next from empcur into @empno1,@empname1,@job1,@deptno1,@salary1
+end 
+close empcur
+deallocate empcur
+end
+
+exec getrec4
+
+create function dbo.tab_val2()
+returns table
+as
+return select a.empno,a.empname,a.job,a.deptno,a.salary,b.deptname,b.locid,c.loc_name from 
+emp a,dept b,location c where a.deptno=b.deptno and b.locid=c.locid
+
+select empno,empname,deptname,loc_name from dbo.tab_val2();
+
+create table log_table(logid int,Error_msg varchar(500))
+drop table log_table
+
+begin try
+declare @num1 tinyint,
+@result tinyint
+set @num1=259;
+set @result=@num1*30;
+select @num1 as num1,@result as result
+end try
+begin catch
+insert into log_table values(101,ERROR_MESSAGE());
+end catch
+
+
+select * from log_table
+
+
+
+
