@@ -7,6 +7,10 @@ salary int)
 
 create table dept(deptno int primary key,deptname varchar(20),loc_name varchar(20))
 
+create table location(locid int,loc_name varchar(20))
+insert into location(locid,loc_name)
+values (10,'hyderabad'),(20,'bang'),(30,'chennai');
+
 --inserting into tables
 
 insert into emp values(1001,'sam','manager',10,7000)
@@ -51,6 +55,22 @@ as
 select  job,deptname,empname,empno from emp as e
 inner join dept as d
 on e.deptno=d.deptno
+---droping view
+drop view full_details
+
+--ex2 on view
+create view netsalary
+as
+select empname,empno,salary,salary*10/100 as tax from emp
+select empname,empno,salary,tax,salary-tax as netsal from netsalary
+
+--working as objects ex-3
+create view joinview
+as
+select a.empno,a.empname,a.job,a.deptno,a.salary,b.deptname,b.locid,c.loc_name from 
+emp a,dept b,location c 
+where a.deptno=b.deptno and b.locid=c.locid
+select * from joinview
 
 --min,maax etc
 select min(empno) as leastemp from emp 
@@ -70,11 +90,45 @@ select * from emp
 union 
 select * from dept
 
----droping view
-drop view full_details
+--using sequence
+create sequence seq1 as int
+start with 1002
+increment by 1
+maxvalue 9999
+no cycle
+
+create table tempEmp(empno int primary key,empname varchar(20),salary int)
+--user1
+insert into tempEmp values(1001,'sks',2000)
+select * from tempEmp
+--user2
+insert into tempEmp values(next value for seq1,'peter',7000)
+select * from tempEmp
+--user3
+insert into tempEmp values(next value for seq1,'rahul',8000)
+
+insert into tempEmp values(next value for seq1,'sam',6000)
+select * from tempEmp
+drop table tempEmp
+
+--adding all fields on coulmns
+create table empCons(empno int primary key,empname varchar(20) not null,
+emailid varchar(20) unique, deptno int constraint f_key_cons foreign key(deptno)
+references dept(deptno),salary int check(salary between 5000 and 20000))
+insert into empCons values(1001,'sam','sam@123',10,10000)
+insert into empCons values(1004,'peter','pt@gmail',20,1220)
+select * from empCons
+
 
 ---dropping tables
 drop table emp,dept
+
+
+---delete values
+delete from emp where job='se'
+delete from  emp where empname='afnan'
+select * from emp order by salary
+
 
 ----printing
 select * from emp
